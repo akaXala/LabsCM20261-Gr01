@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import co.edu.udea.compumovil.gr01_20261.lab1.ui.theme.Labs20261Gr01Theme
@@ -36,6 +37,7 @@ class ContactDataActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactDataScreen() {
     val context = LocalContext.current
@@ -50,6 +52,10 @@ fun ContactDataScreen() {
     var telefonoError by rememberSaveable { mutableStateOf(false) }
     var direccionError by rememberSaveable { mutableStateOf(false) }
     var emailError by rememberSaveable { mutableStateOf(false) }
+
+    // Estado para el autocompletado de país
+    var expandedPais by remember { mutableStateOf(false) }
+    val paisesLatam = listOf("Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Costa Rica", "Cuba", "Ecuador", "El Salvador", "Guatemala", "Honduras", "México", "Nicaragua", "Panamá", "Paraguay", "Perú", "Puerto Rico", "República Dominicana", "Uruguay", "Venezuela")
 
     Column(
         modifier = Modifier
@@ -66,11 +72,15 @@ fun ContactDataScreen() {
         OutlinedTextField(
             value = telefono,
             onValueChange = { telefono = it; telefonoError = false },
-            label = { Text("Telefono *") },
+            label = { Text("Teléfono *") },
             leadingIcon = { Icon(Icons.Default.Call, contentDescription = null) },
             isError = telefonoError,
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Phone,
+                imeAction = ImeAction.Next
+            )
         )
 
         OutlinedTextField(
@@ -79,7 +89,12 @@ fun ContactDataScreen() {
             label = { Text("Dirección *") },
             leadingIcon = { Icon(Icons.Default.Home, contentDescription = null) },
             isError = direccionError,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                autoCorrectEnabled = false,
+                imeAction = ImeAction.Next
+            )
         )
 
         OutlinedTextField(
@@ -89,42 +104,69 @@ fun ContactDataScreen() {
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             isError = emailError,
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            )
         )
 
-        if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = pais,
-                    onValueChange = { pais = it },
-                    label = { Text("País") },
-                    leadingIcon = { Icon(Icons.Default.Place, contentDescription = null) },
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = ciudad,
-                    onValueChange = { ciudad = it },
-                    label = { Text("Ciudad") },
-                    leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        } else {
+        ExposedDropdownMenuBox(
+            expanded = expandedPais,
+            onExpandedChange = { expandedPais = !expandedPais },
+            modifier = Modifier.fillMaxWidth()
+        ) {
             OutlinedTextField(
                 value = pais,
-                onValueChange = { pais = it },
-                label = { Text("País") },
+                onValueChange = {
+                    pais = it
+                    expandedPais = it.isNotEmpty()
+                },
+                label = { Text("País *") },
                 leadingIcon = { Icon(Icons.Default.Place, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth()
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPais) },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next
+                ),
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
             )
-            OutlinedTextField(
-                value = ciudad,
-                onValueChange = { ciudad = it },
-                label = { Text("Ciudad") },
-                leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth()
-            )
+
+            val filtrados = paisesLatam.filter { it.contains(pais, ignoreCase = true) }
+
+            if (filtrados.isNotEmpty()) {
+                ExposedDropdownMenu(
+                    expanded = expandedPais,
+                    onDismissRequest = { expandedPais = false }
+                ) {
+                    filtrados.forEach { sugerencia ->
+                        DropdownMenuItem(
+                            text = { Text(sugerencia) },
+                            onClick = {
+                                pais = sugerencia
+                                expandedPais = false
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                        )
+                    }
+                }
+            }
         }
+
+        OutlinedTextField(
+            value = ciudad,
+            onValueChange = { ciudad = it },
+            label = { Text("Ciudad") },
+            leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Done
+            )
+        )
 
         Button(
             onClick = {

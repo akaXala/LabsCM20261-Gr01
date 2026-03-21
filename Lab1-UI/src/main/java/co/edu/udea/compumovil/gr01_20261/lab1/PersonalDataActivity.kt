@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import co.edu.udea.compumovil.gr01_20261.lab1.ui.theme.Labs20261Gr01Theme
@@ -109,7 +110,8 @@ fun PersonalDataScreen() {
                     label = "Nombres *",
                     icon = Icons.Default.Person,
                     isError = nombreError,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    imeAction = ImeAction.Next
                 )
                 CustomTextField(
                     value = apellido,
@@ -117,7 +119,8 @@ fun PersonalDataScreen() {
                     label = "Apellidos *",
                     icon = Icons.Default.Person,
                     isError = apellidoError,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    imeAction = ImeAction.Next
                 )
             }
         } else {
@@ -126,14 +129,16 @@ fun PersonalDataScreen() {
                 onValueChange = { nombre = it; nombreError = false },
                 label = "Nombres *",
                 icon = Icons.Default.Person,
-                isError = nombreError
+                isError = nombreError,
+                imeAction = ImeAction.Next
             )
             CustomTextField(
                 value = apellido,
                 onValueChange = { apellido = it; apellidoError = false },
                 label = "Apellidos *",
                 icon = Icons.Default.Person,
-                isError = apellidoError
+                isError = apellidoError,
+                imeAction = ImeAction.Next
             )
         }
 
@@ -231,6 +236,9 @@ fun PersonalDataScreen() {
                     Log.i("Main Activity", sexoSelected)
                     Log.i("Main Activity", "Nacio el $fechaTexto")
                     Log.i("Main Activity", escolaridadSelected)
+
+                    val intent = android.content.Intent(context, ContactDataActivity::class.java)
+                    context.startActivity(intent)
                 }
             },
             modifier = Modifier
@@ -249,7 +257,8 @@ fun CustomTextField(
     label: String,
     icon: ImageVector,
     isError: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    imeAction: ImeAction = ImeAction.Default
 ) {
     OutlinedTextField(
         value = value,
@@ -258,9 +267,11 @@ fun CustomTextField(
         leadingIcon = { Icon(icon, contentDescription = null) },
         isError = isError,
         modifier = modifier.fillMaxWidth(),
+        singleLine = true,
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.Words,
-            autoCorrectEnabled = false
+            autoCorrectEnabled = false,
+            imeAction = imeAction
         )
     )
 }
