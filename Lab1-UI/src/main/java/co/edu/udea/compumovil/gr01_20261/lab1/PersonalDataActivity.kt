@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import co.edu.udea.compumovil.gr01_20261.lab1.ui.theme.Labs20261Gr01Theme
 import java.text.SimpleDateFormat
@@ -270,8 +271,9 @@ fun CustomTextField(
         singleLine = true,
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.Words,
-            autoCorrectEnabled = false,
+            keyboardType = KeyboardType.Password,
             imeAction = imeAction
         )
     )
 }
+

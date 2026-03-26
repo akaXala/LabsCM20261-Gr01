@@ -1,6 +1,5 @@
 package co.edu.udea.compumovil.gr01_20261.lab1
 
-import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -14,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +22,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
+import co.edu.udea.compumovil.gr01_20261.lab1.photon.PhotonFetch
 import co.edu.udea.compumovil.gr01_20261.lab1.ui.theme.Labs20261Gr01Theme
 
 class ContactDataActivity : ComponentActivity() {
@@ -43,6 +46,9 @@ fun ContactDataScreen() {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
 
+    val photonViewModel: PhotonFetch = viewModel()
+    val suggestions by photonViewModel.results.observeAsState(emptyList())
+
     var telefono by rememberSaveable { mutableStateOf("") }
     var direccion by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
@@ -56,6 +62,10 @@ fun ContactDataScreen() {
     // Estado para el autocompletado de país
     var expandedPais by remember { mutableStateOf(false) }
     val paisesLatam = listOf("Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Costa Rica", "Cuba", "Ecuador", "El Salvador", "Guatemala", "Honduras", "México", "Nicaragua", "Panamá", "Paraguay", "Perú", "Puerto Rico", "República Dominicana", "Uruguay", "Venezuela")
+
+    // Estado para el autocompletado de ciudad
+    var expandedCiudad by remember { mutableStateOf(false) }
+    val filtrados = paisesLatam.filter { it.contains(pais, ignoreCase = true) }
 
     Column(
         modifier = Modifier
@@ -92,7 +102,7 @@ fun ContactDataScreen() {
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(
-                autoCorrectEnabled = false,
+                keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Next
             )
         )
@@ -112,8 +122,8 @@ fun ContactDataScreen() {
         )
 
         ExposedDropdownMenuBox(
-            expanded = expandedPais,
-            onExpandedChange = { expandedPais = !expandedPais },
+            expanded = expandedPais && filtrados.isNotEmpty(),
+            onExpandedChange = { expandedPais = it },
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
@@ -121,6 +131,9 @@ fun ContactDataScreen() {
                 onValueChange = {
                     pais = it
                     expandedPais = it.isNotEmpty()
+                    if (ciudad.length >= 3) {
+                        photonViewModel.search(ciudad, it)
+                    }
                 },
                 label = { Text("País *") },
                 leadingIcon = { Icon(Icons.Default.Place, contentDescription = null) },
@@ -131,42 +144,78 @@ fun ContactDataScreen() {
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next
-                ),
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                )
             )
 
-            val filtrados = paisesLatam.filter { it.contains(pais, ignoreCase = true) }
-
-            if (filtrados.isNotEmpty()) {
-                ExposedDropdownMenu(
-                    expanded = expandedPais,
-                    onDismissRequest = { expandedPais = false }
-                ) {
-                    filtrados.forEach { sugerencia ->
-                        DropdownMenuItem(
-                            text = { Text(sugerencia) },
-                            onClick = {
-                                pais = sugerencia
-                                expandedPais = false
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                        )
-                    }
+            DropdownMenu(
+                expanded = expandedPais && filtrados.isNotEmpty(),
+                onDismissRequest = { expandedPais = false },
+                modifier = Modifier.exposedDropdownSize().heightIn(max = 250.dp),
+                properties = PopupProperties(focusable = false)
+            ) {
+                filtrados.forEach { sugerencia ->
+                    DropdownMenuItem(
+                        text = { Text(sugerencia) },
+                        onClick = {
+                            pais = sugerencia
+                            expandedPais = false
+                            if (ciudad.length >= 3) {
+                                photonViewModel.search(ciudad, sugerencia)
+                            }
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                    )
                 }
             }
         }
 
-        OutlinedTextField(
-            value = ciudad,
-            onValueChange = { ciudad = it },
-            label = { Text("Ciudad") },
-            leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done
+        ExposedDropdownMenuBox(
+            expanded = expandedCiudad && suggestions.isNotEmpty(),
+            onExpandedChange = { expandedCiudad = it },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = ciudad,
+                onValueChange = {
+                    ciudad = it
+                    if (it.isNotEmpty()) {
+                        photonViewModel.search(it, pais)
+                        expandedCiudad = true
+                    } else {
+                        expandedCiudad = false
+                    }
+                },
+                label = { Text("Ciudad") },
+                leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCiudad) },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                )
             )
-        )
+
+            DropdownMenu(
+                expanded = expandedCiudad && suggestions.isNotEmpty(),
+                onDismissRequest = { expandedCiudad = false },
+                modifier = Modifier.exposedDropdownSize().heightIn(max = 250.dp),
+                properties = PopupProperties(focusable = false)
+            ) {
+                suggestions.forEach { feature ->
+                    val cityName = feature.properties.name
+                    DropdownMenuItem(
+                        text = { Text(cityName) },
+                        onClick = {
+                            ciudad = cityName
+                            expandedCiudad = false
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                    )
+                }
+            }
+        }
 
         Button(
             onClick = {
