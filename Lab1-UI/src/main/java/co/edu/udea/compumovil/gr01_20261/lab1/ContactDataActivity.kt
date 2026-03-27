@@ -3,8 +3,8 @@ package co.edu.udea.compumovil.gr01_20261.lab1
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -27,7 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import co.edu.udea.compumovil.gr01_20261.lab1.photon.PhotonFetch
 import co.edu.udea.compumovil.gr01_20261.lab1.ui.theme.Labs20261Gr01Theme
 
-class ContactDataActivity : ComponentActivity() {
+class ContactDataActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -74,15 +75,22 @@ fun ContactDataScreen() {
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text(
-            text = "Información de contacto",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.contact_info_title),
+                style = MaterialTheme.typography.headlineMedium
+            )
+            LanguageSwitcher()
+        }
 
         OutlinedTextField(
             value = telefono,
             onValueChange = { telefono = it; telefonoError = false },
-            label = { Text("Teléfono *") },
+            label = { Text(stringResource(R.string.phone)) },
             leadingIcon = { Icon(Icons.Default.Call, contentDescription = null) },
             isError = telefonoError,
             modifier = Modifier.fillMaxWidth(),
@@ -96,13 +104,13 @@ fun ContactDataScreen() {
         OutlinedTextField(
             value = direccion,
             onValueChange = { direccion = it; direccionError = false },
-            label = { Text("Dirección *") },
+            label = { Text(stringResource(R.string.address)) },
             leadingIcon = { Icon(Icons.Default.Home, contentDescription = null) },
             isError = direccionError,
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
+                keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
             )
         )
@@ -110,7 +118,7 @@ fun ContactDataScreen() {
         OutlinedTextField(
             value = email,
             onValueChange = { email = it; emailError = false },
-            label = { Text("Email *") },
+            label = { Text(stringResource(R.string.email)) },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             isError = emailError,
             modifier = Modifier.fillMaxWidth(),
@@ -135,7 +143,7 @@ fun ContactDataScreen() {
                         photonViewModel.search(ciudad, it)
                     }
                 },
-                label = { Text("País *") },
+                label = { Text(stringResource(R.string.country)) },
                 leadingIcon = { Icon(Icons.Default.Place, contentDescription = null) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPais) },
                 modifier = Modifier
@@ -185,7 +193,7 @@ fun ContactDataScreen() {
                         expandedCiudad = false
                     }
                 },
-                label = { Text("Ciudad") },
+                label = { Text(stringResource(R.string.city)) },
                 leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCiudad) },
                 modifier = Modifier
@@ -224,7 +232,11 @@ fun ContactDataScreen() {
                 emailError = email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
 
                 if (telefonoError || direccionError || emailError) {
-                    val msg = if (emailError && email.isNotBlank()) "Email no válido" else "Complete los campos obligatorios (*)"
+                    val msg = if (emailError && email.isNotBlank()) {
+                        context.getString(R.string.invalid_email_error)
+                    } else {
+                        context.getString(R.string.contact_mandatory_error)
+                    }
                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                 } else {
                     Log.i("Main Activity", "Información de contacto:")
@@ -237,7 +249,7 @@ fun ContactDataScreen() {
             },
             modifier = Modifier.align(Alignment.End).padding(top = 16.dp)
         ) {
-            Text(text = "Siguiente")
+            Text(text = stringResource(R.string.next_button))
         }
     }
 }
