@@ -1,3 +1,31 @@
 <resources>
     <string name="app_name">Labs20261-Gr01</string>
+    <string name="personal_info_title">Información personal</string>
+    <string name="first_names">Nombres *</string>
+    <string name="last_names">Apellidos *</string>
+    <string name="gender">Sexo:</string>
+    <string name="male">Hombre</string>
+    <string name="female">Mujer</string>
+    <string name="birth_date_label">Fecha de nacimiento *:</string>
+    <string name="change_button">Cambiar</string>
+    <string name="education_level">Grado de escolaridad</string>
+    <string name="education_primary">Primaria</string>
+    <string name="education_secondary">Secundaria</string>
+    <string name="education_university">Universitaria</string>
+    <string name="education_other">Otro</string>
+    <string name="mandatory_fields_error">Por favor complete los campos obligatorios (*)</string>
+    <string name="next_button">Siguiente</string>
+
+    <string name="contact_info_title">Información de contacto</string>
+    <string name="phone">Teléfono *</string>
+    <string name="address">Dirección *</string>
+    <string name="email">Email *</string>
+    <string name="country">País *</string>
+    <string name="city">Ciudad</string>
+    <string name="invalid_email_error">Email no válido</string>
+    <string name="contact_mandatory_error">Complete los campos obligatorios (*)</string>
+
+    <string name="language_option">Idioma</string>
+    <string name="spanish">Español</string>
+    <string name="english">Ingles</string>
 </resources>
